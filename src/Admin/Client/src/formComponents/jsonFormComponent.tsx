@@ -1,14 +1,15 @@
-import React, { useState } from 'react';
-
+import React from 'react';
 import { FormComponentProps } from '@kentico/xperience-admin-base';
-import { Button, FormItemWrapper, Input } from '@kentico/xperience-admin-components';
+import { Button, ButtonColor, ButtonSize, FormItemWrapper, Headline, HeadlineSize, Input, Spacing, TextWithLabel } from '@kentico/xperience-admin-components';
 
+/** Corresponds with the C# class JsonInput */
 interface JsonInput {
     propertyName: string;
     label: string;
     type: number;
 }
 
+/** Corresponds with the C# class JsonInputType */
 enum JsonInputType {
     Text,
     Number,
@@ -23,7 +24,6 @@ export interface JsonFormComponentClientProperties extends FormComponentProps {
 }
 
 export const JsonFormComponent = (props: JsonFormComponentClientProperties) => {
-    const objectSeparator = <hr style={{ margin: '20px 0px' }} />;
     const jsonObjects: any[] = props.value ? JSON.parse(props.value) : [];
 
     /**
@@ -41,6 +41,16 @@ export const JsonFormComponent = (props: JsonFormComponentClientProperties) => {
      */
     const insertObject = () => {
         jsonObjects.push({});
+        if (props.onChange) {
+            props.onChange(JSON.stringify(jsonObjects));
+        }
+    };
+
+    /**
+     * Handler for the delete JSON object button. Deletes the object at the provided {@link index} and re-renders the field.
+     */
+    const deleteObject = (index: number) => {
+        jsonObjects.splice(index, 1);
         if (props.onChange) {
             props.onChange(JSON.stringify(jsonObjects));
         }
@@ -73,17 +83,39 @@ export const JsonFormComponent = (props: JsonFormComponentClientProperties) => {
         const jsonObjectsAsContainers: JSX.Element[] = [];
 
         // Loop through individual objects in value array
-        jsonObjects.forEach(o => {
+        jsonObjects.forEach((o, index) => {
             if (!props.inputs) {
                 return;
             }
 
             const inputElements = props.inputs.map(i => getInput(i, o));
-            const containerContent = insertBetween(<br/>, inputElements);
+            const containerContent = insertBetween(<br />, inputElements);
+            // Add header to beginning of content
+            containerContent.unshift(getContainerHeader(index));
             jsonObjectsAsContainers.push(<div>{containerContent}</div>)
         });
 
         return jsonObjectsAsContainers;
+    };
+
+    /**
+     * Gets the header for a JSON objects container, including the item number and delete button.
+     */
+    const getContainerHeader = (index: number) => {
+        const deleteButton = <Button
+            icon='xp-bin'
+            title='Delete'
+            borderless={true}
+            size={ButtonSize.S}
+            color={ButtonColor.Quinary}
+            onClick={() => deleteObject(index)} />
+
+        return <Headline
+            size={HeadlineSize.S}
+            spacingBottom={Spacing.S}
+            spacingTop={Spacing.S}>
+            {deleteButton} {'Item ' + (index + 1)}
+        </Headline>
     };
 
     /**
@@ -93,7 +125,6 @@ export const JsonFormComponent = (props: JsonFormComponentClientProperties) => {
         elements.flatMap((x) => [separator, x]).slice(1);
     
 
-    const containers = getObjectContainers();
     return <FormItemWrapper
         label={props.label}
         explanationText={props.explanationText}
@@ -103,11 +134,12 @@ export const JsonFormComponent = (props: JsonFormComponentClientProperties) => {
         labelIcon={props.tooltip ? 'xp-i-circle' : undefined}
         labelIconTooltip={props.tooltip}>
 
-        {insertBetween(objectSeparator, containers)}
+        {getObjectContainers()}
         <br/>
         <Button
-            label='Add new'
+            label='New'
             icon='xp-plus'
+            title='Add new JSON item'
             onClick={insertObject} />
     </FormItemWrapper>
 };
