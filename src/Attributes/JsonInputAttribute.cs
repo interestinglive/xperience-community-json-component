@@ -3,9 +3,9 @@
 namespace XperienceCommunity.JsonComponent.Attributes;
 
 [AttributeUsage(AttributeTargets.Property)]
-public class JsonInputAttribute(JsonInputType type) : Attribute
+public class JsonInputAttribute : Attribute
 {
-    public JsonInputType Type { get; set; } = type;
+    public JsonInputType Type { get; set; } = JsonInputType.Text;
 
 
     public string? Label { get; set; }

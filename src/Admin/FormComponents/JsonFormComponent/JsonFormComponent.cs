@@ -3,11 +3,8 @@
 using Kentico.Xperience.Admin.Base.FormAnnotations;
 using Kentico.Xperience.Admin.Base.Forms;
 
-using Microsoft.AspNetCore.Mvc.ViewFeatures;
-
 using XperienceCommunity.JsonComponent.Admin.FormComponents.JsonFormComponent;
 using XperienceCommunity.JsonComponent.Attributes;
-using XperienceCommunity.JsonComponent.Enum;
 using XperienceCommunity.JsonComponent.Models;
 
 [assembly: RegisterFormComponent(
@@ -44,26 +41,28 @@ public class JsonFormComponent : FormComponent<JsonFormComponentProperties, Json
         {
             var modelType = GetType(Properties.ModelNamespace) ??
                 throw new InvalidOperationException($"Could not find type '{Properties.ModelNamespace}'");
-            clientProperties.Inputs = GetInputs(modelType);
+            clientProperties.Inputs = GetInputs(modelType).Where(i => i is not null);
         }
 
         return base.ConfigureClientProperties(clientProperties);
     }
 
 
-    private static IEnumerable<JsonInput> GetInputs(Type modelType) =>
-        modelType.GetProperties().Select(prop =>
+    private static IEnumerable<JsonInput> GetInputs(Type modelType)
+    {
+        var properties = modelType.GetProperties().Where(p => Attribute.IsDefined(p, typeof(JsonInputAttribute)));
+        return properties.Select(prop =>
         {
-            var jsonInputAttribute = prop.GetCustomAttribute<JsonInputAttribute>() ??
-                new JsonInputAttribute(JsonInputType.Text);
+            var jsonInputAttribute = prop.GetCustomAttribute<JsonInputAttribute>()!;
 
             return new JsonInput()
             {
-                InputType = jsonInputAttribute.Type,
                 PropertyName = prop.Name,
+                Type = jsonInputAttribute.Type,
                 Label = jsonInputAttribute.Label ?? prop.Name
             };
         });
+    }
 
 
     private static Type? GetType(string typeName)

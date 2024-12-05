@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 
 import { FormComponentProps } from '@kentico/xperience-admin-base';
-import { FormItemWrapper, Input } from '@kentico/xperience-admin-components';
+import { Button, FormItemWrapper, Input } from '@kentico/xperience-admin-components';
 
 interface JsonInput {
     propertyName: string;
     label: string;
-    inputType: number;
+    type: number;
 }
 
 enum JsonInputType {
@@ -23,6 +23,7 @@ export interface JsonFormComponentClientProperties extends FormComponentProps {
 }
 
 export const JsonFormComponent = (props: JsonFormComponentClientProperties) => {
+    const objectSeparator = <hr style={{ margin: '20px 0px' }} />;
     const jsonObjects: any[] = props.value ? JSON.parse(props.value) : [];
 
     /**
@@ -36,20 +37,33 @@ export const JsonFormComponent = (props: JsonFormComponentClientProperties) => {
     };
 
     /**
+     * Handler for new JSON object button. Inserts empty JSON object into array and re-renders the field.
+     */
+    const insertObject = () => {
+        jsonObjects.push({});
+        if (props.onChange) {
+            props.onChange(JSON.stringify(jsonObjects));
+        }
+    };
+
+    /**
      * Returns an input element for the specified {@link input} and {@link jsonObject}.
      */
     const getInput = (input: JsonInput, jsonObject: any): JSX.Element => {
         const propertyValue = jsonObject[input.propertyName];
         const handler = (e: React.ChangeEvent<HTMLInputElement>) => updateJsonObject(e.target.value, input, jsonObject);
-        switch (input.inputType) {
+        let element;
+        switch (input.type) {
             default:
             case JsonInputType.Text:
-                return <Input
+                 element = <Input
                     type='text'
                     label={input.label}
                     value={propertyValue}
                     onChange={handler} />
         }
+
+        return element;
     };
 
     /**
@@ -57,10 +71,16 @@ export const JsonFormComponent = (props: JsonFormComponentClientProperties) => {
      */
     const getObjectContainers = (): JSX.Element[] => {
         const jsonObjectsAsContainers: JSX.Element[] = [];
+
         // Loop through individual objects in value array
         jsonObjects.forEach(o => {
-            const elements = props.inputs?.map(i => getInput(i, o));
-            jsonObjectsAsContainers.push(<div>{elements}</div>)
+            if (!props.inputs) {
+                return;
+            }
+
+            const inputElements = props.inputs.map(i => getInput(i, o));
+            const containerContent = insertBetween(<br/>, inputElements);
+            jsonObjectsAsContainers.push(<div>{containerContent}</div>)
         });
 
         return jsonObjectsAsContainers;
@@ -83,6 +103,11 @@ export const JsonFormComponent = (props: JsonFormComponentClientProperties) => {
         labelIcon={props.tooltip ? 'xp-i-circle' : undefined}
         labelIconTooltip={props.tooltip}>
 
-        {insertBetween(<hr/>, containers)}
+        {insertBetween(objectSeparator, containers)}
+        <br/>
+        <Button
+            label='Add new'
+            icon='xp-plus'
+            onClick={insertObject} />
     </FormItemWrapper>
 };

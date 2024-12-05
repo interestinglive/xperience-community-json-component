@@ -9,5 +9,5 @@ public class JsonInput
     public string? Label { get; set; }
 
 
-    public JsonInputType InputType { get; set; }
+    public JsonInputType Type { get; set; }
 }
