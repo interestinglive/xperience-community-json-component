@@ -10,6 +10,8 @@ import {
     HeadlineSize,
     Input,
     MenuItem,
+    RadioButton,
+    RadioGroup,
     Select,
     Spacing
 } from '@kentico/xperience-admin-components';
@@ -28,7 +30,6 @@ enum JsonInputType {
     Number,
     Dropdown,
     Checkbox,
-    Checkboxes,
     RadioGroup
 }
 
@@ -58,7 +59,12 @@ export const JsonFormComponent = (props: JsonFormComponentClientProperties) => {
      * Handler for new JSON object button. Inserts empty JSON object into array and re-renders the field.
      */
     const insertObject = () => {
-        jsonObjects.push({});
+        const jsonObject: any = {};
+        props.inputs?.forEach(i => {
+            const defaultValue = getDefaultValue(i);
+            jsonObject[i.propertyName] = defaultValue;
+        });
+        jsonObjects.push(jsonObject);
         save();
     };
 
@@ -80,7 +86,19 @@ export const JsonFormComponent = (props: JsonFormComponentClientProperties) => {
 
             return <MenuItem primaryLabel={optionSplit[1]} value={optionSplit[0]} />
         });
-    }
+    };
+
+    /**
+     * Returns an array of {@link RadioButton}s generated from the provided inputs {@link JsonInput.options}.
+     */
+    const getRadioGroupOptions = (input: JsonInput) => {
+        const options = input.options?.split('|');
+        return options?.map(o => {
+            const optionSplit = o.split(';');
+
+            return <RadioButton value={optionSplit[0]}>{optionSplit[1]}</RadioButton>
+        });
+    };
 
     /**
      * Returns the default value of the provided {@link input}.
@@ -94,7 +112,6 @@ export const JsonFormComponent = (props: JsonFormComponentClientProperties) => {
             default:
             case JsonInputType.Text:
             case JsonInputType.Dropdown:
-            case JsonInputType.Checkboxes:
             case JsonInputType.RadioGroup:
                 return '';
         }
@@ -103,22 +120,25 @@ export const JsonFormComponent = (props: JsonFormComponentClientProperties) => {
     /**
      * Returns an input element for the specified {@link input} and {@link jsonObject}.
      */
-    const getInput = (input: JsonInput, jsonObject: any): JSX.Element => {
-        let propertyValue = jsonObject[input.propertyName];
-        if (!propertyValue) {
-            propertyValue = getDefaultValue(input);
-            jsonObject[input.propertyName] = propertyValue;
-        }
-
+    const getInput = (input: JsonInput, jsonObject: any, jsonObjectIndex: number): JSX.Element => {
+        const propertyValue = jsonObject[input.propertyName];
         switch (input.type) {
+            case JsonInputType.RadioGroup:
+                return <RadioGroup
+                    value={propertyValue}
+                    label={input.label}
+                    name={jsonObjectIndex + '-' + input.propertyName}
+                    onChange={(val) => updateJsonObject(val, input, jsonObject)}>
+                    {getRadioGroupOptions(input)}
+                </RadioGroup>
             case JsonInputType.Checkbox:
-                return <Checkbox
+                return <div><Checkbox
                     label={input.label}
                     checked={propertyValue}
-                    onChange={(_, checked) => updateJsonObject(checked, input, jsonObject)} />
+                    onChange={(_, checked) => updateJsonObject(checked, input, jsonObject)} /></div>
             case JsonInputType.Dropdown:
                 return <Select
-                    value={propertyValue ?? undefined}
+                    value={propertyValue}
                     label={input.label}
                     clearable={true}
                     clearButtonTooltip='Clear'
@@ -153,7 +173,7 @@ export const JsonFormComponent = (props: JsonFormComponentClientProperties) => {
                 return;
             }
 
-            const inputElements = props.inputs.map(i => getInput(i, o));
+            const inputElements = props.inputs.map(i => getInput(i, o, index));
             const containerContent = insertBetween(<br />, inputElements);
             // Add header to beginning of content
             containerContent.unshift(getContainerHeader(index));
@@ -202,8 +222,6 @@ export const JsonFormComponent = (props: JsonFormComponentClientProperties) => {
     }
 
     const containers = getObjectContainers();
-    // JSON object properties are only updated on change- force save after loading the objects and stored/default values
-    save();
     return <FormItemWrapper
         label={props.label}
         explanationText={props.explanationText}

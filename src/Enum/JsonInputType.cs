@@ -6,6 +6,5 @@ public enum JsonInputType
     Number,
     Dropdown,
     Checkbox,
-    Checkboxes,
     RadioGroup
 }
