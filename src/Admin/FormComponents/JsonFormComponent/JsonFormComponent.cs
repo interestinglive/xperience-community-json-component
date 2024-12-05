@@ -70,6 +70,8 @@ public class JsonFormComponent : FormComponent<JsonFormComponentProperties, Json
         {
             var jsonInputAttribute = prop.GetCustomAttribute<JsonInputAttribute>()!;
 
+            // TODO: Validate input type and prop value type
+
             return new JsonInput()
             {
                 PropertyName = prop.Name,

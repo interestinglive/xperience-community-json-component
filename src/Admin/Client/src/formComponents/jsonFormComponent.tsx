@@ -4,6 +4,7 @@ import {
     Button,
     ButtonColor,
     ButtonSize,
+    Checkbox,
     FormItemWrapper,
     Headline,
     HeadlineSize,
@@ -48,7 +49,7 @@ export const JsonFormComponent = (props: JsonFormComponentClientProperties) => {
     /**
      * Handler for input change event. Updates a JSON objects property and saves the field value.
      */
-    const updateJsonObject = (value: string | undefined, input: JsonInput, jsonObject: any) => {
+    const updateJsonObject = (value: any | undefined, input: JsonInput, jsonObject: any) => {
         jsonObject[input.propertyName] = value;
         save();
     };
@@ -82,19 +83,46 @@ export const JsonFormComponent = (props: JsonFormComponentClientProperties) => {
     }
 
     /**
+     * Returns the default value of the provided {@link input}.
+     */
+    const getDefaultValue = (input: JsonInput) => {
+        switch (input.type) {
+            case JsonInputType.Checkbox:
+                return false;
+            case JsonInputType.Number:
+                return 0;
+            default:
+            case JsonInputType.Text:
+            case JsonInputType.Dropdown:
+            case JsonInputType.Checkboxes:
+            case JsonInputType.RadioGroup:
+                return '';
+        }
+    };
+
+    /**
      * Returns an input element for the specified {@link input} and {@link jsonObject}.
      */
     const getInput = (input: JsonInput, jsonObject: any): JSX.Element => {
-        const propertyValue = jsonObject[input.propertyName];
-        const handler = (e: React.ChangeEvent<HTMLInputElement>) => updateJsonObject(e.target.value, input, jsonObject);
+        let propertyValue = jsonObject[input.propertyName];
+        if (!propertyValue) {
+            propertyValue = getDefaultValue(input);
+            jsonObject[input.propertyName] = propertyValue;
+        }
+
         switch (input.type) {
+            case JsonInputType.Checkbox:
+                return <Checkbox
+                    label={input.label}
+                    checked={propertyValue}
+                    onChange={(_, checked) => updateJsonObject(checked, input, jsonObject)} />
             case JsonInputType.Dropdown:
                 return <Select
                     value={propertyValue ?? undefined}
                     label={input.label}
-                    onChange={(val) => updateJsonObject(val, input, jsonObject)}
                     clearable={true}
-                    clearButtonTooltip='Clear'>
+                    clearButtonTooltip='Clear'
+                    onChange={(val) => updateJsonObject(val, input, jsonObject)}>
                     {getDropdownOptions(input)}
                 </Select>
             case JsonInputType.Number:
@@ -102,14 +130,14 @@ export const JsonFormComponent = (props: JsonFormComponentClientProperties) => {
                     type='number'
                     label={input.label}
                     value={propertyValue}
-                    onChange={handler} />
+                    onChange={(e) => updateJsonObject(parseInt(e.target.value), input, jsonObject)} />
             default:
             case JsonInputType.Text:
-                 return <Input
+                return <Input
                     type='text'
                     label={input.label}
                     value={propertyValue}
-                    onChange={handler} />
+                    onChange={(e) => updateJsonObject(e.target.value, input, jsonObject)} />
         }
     };
 
@@ -173,6 +201,9 @@ export const JsonFormComponent = (props: JsonFormComponentClientProperties) => {
             labelIconTooltip={props.tooltip} />
     }
 
+    const containers = getObjectContainers();
+    // JSON object properties are only updated on change- force save after loading the objects and stored/default values
+    save();
     return <FormItemWrapper
         label={props.label}
         explanationText={props.explanationText}
@@ -182,7 +213,7 @@ export const JsonFormComponent = (props: JsonFormComponentClientProperties) => {
         labelIcon={props.tooltip ? 'xp-i-circle' : undefined}
         labelIconTooltip={props.tooltip}>
 
-        {getObjectContainers()}
+        {containers}
         <br/>
         <Button
             label='New'
