@@ -1,12 +1,24 @@
 import React from 'react';
 import { FormComponentProps } from '@kentico/xperience-admin-base';
-import { Button, ButtonColor, ButtonSize, FormItemWrapper, Headline, HeadlineSize, Input, Spacing, TextWithLabel } from '@kentico/xperience-admin-components';
+import {
+    Button,
+    ButtonColor,
+    ButtonSize,
+    FormItemWrapper,
+    Headline,
+    HeadlineSize,
+    Input,
+    MenuItem,
+    Select,
+    Spacing
+} from '@kentico/xperience-admin-components';
 
 /** Corresponds with the C# class JsonInput */
 interface JsonInput {
     propertyName: string;
     label: string;
     type: number;
+    options: string | undefined;
 }
 
 /** Corresponds with the C# class JsonInputType */
@@ -27,14 +39,18 @@ export interface JsonFormComponentClientProperties extends FormComponentProps {
 export const JsonFormComponent = (props: JsonFormComponentClientProperties) => {
     const jsonObjects: any[] = props.value ? JSON.parse(props.value) : [];
 
-    /**
-     * Handler for input change event. Updates a JSON objects property and saves the field value.
-     */
-    const updateJsonObject = (value: string, input: JsonInput, jsonObject: any) => {
-        jsonObject[input.propertyName] = value;
+    const save = () => {
         if (props.onChange) {
             props.onChange(JSON.stringify(jsonObjects));
         }
+    };
+
+    /**
+     * Handler for input change event. Updates a JSON objects property and saves the field value.
+     */
+    const updateJsonObject = (value: string | undefined, input: JsonInput, jsonObject: any) => {
+        jsonObject[input.propertyName] = value;
+        save();
     };
 
     /**
@@ -42,9 +58,7 @@ export const JsonFormComponent = (props: JsonFormComponentClientProperties) => {
      */
     const insertObject = () => {
         jsonObjects.push({});
-        if (props.onChange) {
-            props.onChange(JSON.stringify(jsonObjects));
-        }
+        save();
     };
 
     /**
@@ -52,10 +66,20 @@ export const JsonFormComponent = (props: JsonFormComponentClientProperties) => {
      */
     const deleteObject = (index: number) => {
         jsonObjects.splice(index, 1);
-        if (props.onChange) {
-            props.onChange(JSON.stringify(jsonObjects));
-        }
+        save();
     };
+
+    /**
+     * Returns an array of {@link MenuItem}s generated from the provided inputs {@link JsonInput.options}.
+     */
+    const getDropdownOptions = (input: JsonInput) => {
+        const options = input.options?.split('|');
+        return options?.map(o => {
+            const optionSplit = o.split(';');
+
+            return <MenuItem primaryLabel={optionSplit[1]} value={optionSplit[0]} />
+        });
+    }
 
     /**
      * Returns an input element for the specified {@link input} and {@link jsonObject}.
@@ -63,18 +87,30 @@ export const JsonFormComponent = (props: JsonFormComponentClientProperties) => {
     const getInput = (input: JsonInput, jsonObject: any): JSX.Element => {
         const propertyValue = jsonObject[input.propertyName];
         const handler = (e: React.ChangeEvent<HTMLInputElement>) => updateJsonObject(e.target.value, input, jsonObject);
-        let element;
         switch (input.type) {
+            case JsonInputType.Dropdown:
+                return <Select
+                    value={propertyValue ?? undefined}
+                    label={input.label}
+                    onChange={(val) => updateJsonObject(val, input, jsonObject)}
+                    clearable={true}
+                    clearButtonTooltip='Clear'>
+                    {getDropdownOptions(input)}
+                </Select>
+            case JsonInputType.Number:
+                return <Input
+                    type='number'
+                    label={input.label}
+                    value={propertyValue}
+                    onChange={handler} />
             default:
             case JsonInputType.Text:
-                 element = <Input
+                 return <Input
                     type='text'
                     label={input.label}
                     value={propertyValue}
                     onChange={handler} />
         }
-
-        return element;
     };
 
     /**

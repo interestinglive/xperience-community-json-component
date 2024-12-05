@@ -10,4 +10,7 @@ public class JsonInput
 
 
     public JsonInputType Type { get; set; }
+
+
+    public string? Options { get; set; }
 }

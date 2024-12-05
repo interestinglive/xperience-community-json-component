@@ -74,7 +74,8 @@ public class JsonFormComponent : FormComponent<JsonFormComponentProperties, Json
             {
                 PropertyName = prop.Name,
                 Type = jsonInputAttribute.Type,
-                Label = jsonInputAttribute.Label ?? prop.Name
+                Label = jsonInputAttribute.Label ?? prop.Name,
+                Options = jsonInputAttribute.Options
             };
         });
     }
