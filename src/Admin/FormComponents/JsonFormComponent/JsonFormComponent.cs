@@ -16,6 +16,9 @@ namespace XperienceCommunity.JsonComponent.Admin.FormComponents.JsonFormComponen
 public class JsonFormComponentClientProperties : FormComponentClientProperties<string>
 {
     public IEnumerable<JsonInput>? Inputs { get; set; }
+
+
+    public string? ErrorMessage { get; set; }
 }
 
 
@@ -39,9 +42,21 @@ public class JsonFormComponent : FormComponent<JsonFormComponentProperties, Json
     {
         if (!string.IsNullOrEmpty(Properties.ModelNamespace))
         {
-            var modelType = GetType(Properties.ModelNamespace) ??
-                throw new InvalidOperationException($"Could not find type '{Properties.ModelNamespace}'");
-            clientProperties.Inputs = GetInputs(modelType).Where(i => i is not null);
+            var modelType = GetType(Properties.ModelNamespace);
+            if (modelType is null)
+            {
+                clientProperties.ErrorMessage = $"Could not find type '{Properties.ModelNamespace}'";
+            }
+            else
+            {
+                var inputs = GetInputs(modelType);
+                if (!inputs.Any())
+                {
+                    clientProperties.ErrorMessage = "Referenced class contains no JSON properties";
+                }
+
+                clientProperties.Inputs = inputs;
+            }
         }
 
         return base.ConfigureClientProperties(clientProperties);

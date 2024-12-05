@@ -21,6 +21,7 @@ enum JsonInputType {
 
 export interface JsonFormComponentClientProperties extends FormComponentProps {
     inputs: JsonInput[] | null;
+    errorMessage: string | null;
 }
 
 export const JsonFormComponent = (props: JsonFormComponentClientProperties) => {
@@ -123,7 +124,18 @@ export const JsonFormComponent = (props: JsonFormComponentClientProperties) => {
      */
     const insertBetween = (separator: JSX.Element, elements: JSX.Element[]) =>
         elements.flatMap((x) => [separator, x]).slice(1);
-    
+
+    if (props.errorMessage) {
+        return <FormItemWrapper
+            label={props.label}
+            explanationText={props.explanationText}
+            invalid={true}
+            validationMessage={props.errorMessage}
+            children={null}
+            markAsRequired={props.required}
+            labelIcon={props.tooltip ? 'xp-i-circle' : undefined}
+            labelIconTooltip={props.tooltip} />
+    }
 
     return <FormItemWrapper
         label={props.label}
