@@ -1,9 +1,9 @@
 ﻿using XperienceCommunity.JsonComponent.Enum;
 
 namespace XperienceCommunity.JsonComponent.Models;
-public class JsonInput
+public class JsonInput(string propertyName)
 {
-    public string? PropertyName { get; set; }
+    public string PropertyName { get; set; } = propertyName;
 
 
     public string? Label { get; set; }

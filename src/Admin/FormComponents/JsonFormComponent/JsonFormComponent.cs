@@ -1,10 +1,13 @@
 ﻿using System.Reflection;
 
+using CMS.Helpers;
+
 using Kentico.Xperience.Admin.Base.FormAnnotations;
 using Kentico.Xperience.Admin.Base.Forms;
 
 using XperienceCommunity.JsonComponent.Admin.FormComponents.JsonFormComponent;
 using XperienceCommunity.JsonComponent.Attributes;
+using XperienceCommunity.JsonComponent.Enum;
 using XperienceCommunity.JsonComponent.Models;
 
 [assembly: RegisterFormComponent(
@@ -50,9 +53,15 @@ public class JsonFormComponent : FormComponent<JsonFormComponentProperties, Json
             else
             {
                 var inputs = GetInputs(modelType);
-                if (!inputs.Any())
+                if (inputs is null || !inputs.Any())
                 {
                     clientProperties.ErrorMessage = "Referenced class contains no JSON properties";
+                }
+
+                string? validationErrorMessage = ValidateProperties(modelType, inputs!);
+                if (validationErrorMessage is not null)
+                {
+                    clientProperties.ErrorMessage = validationErrorMessage;
                 }
 
                 clientProperties.Inputs = inputs;
@@ -63,6 +72,32 @@ public class JsonFormComponent : FormComponent<JsonFormComponentProperties, Json
     }
 
 
+    private static string? ValidateProperties(Type modelType, IEnumerable<JsonInput> inputs)
+    {
+        foreach (var input in inputs)
+        {
+            var relatedProperty = modelType.GetProperty(input.PropertyName);
+            if (relatedProperty is null)
+            {
+                continue;
+            }
+
+            var propType = relatedProperty.PropertyType;
+            bool hasError = ((input.Type == JsonInputType.Text
+                    || input.Type == JsonInputType.Dropdown
+                    || input.Type == JsonInputType.RadioGroup) && propType != typeof(string))
+                || ((input.Type == JsonInputType.Number) && propType != typeof(int))
+                || ((input.Type == JsonInputType.Checkbox) && propType != typeof(bool));
+            if (hasError)
+            {
+                return $"Input type '{input.Type.ToStringRepresentation()}' not compatible with property '{input.PropertyName}'";
+            }
+        }
+
+        return null;
+    }
+
+
     private static IEnumerable<JsonInput> GetInputs(Type modelType)
     {
         var properties = modelType.GetProperties().Where(p => Attribute.IsDefined(p, typeof(JsonInputAttribute)));
@@ -70,11 +105,8 @@ public class JsonFormComponent : FormComponent<JsonFormComponentProperties, Json
         {
             var jsonInputAttribute = prop.GetCustomAttribute<JsonInputAttribute>()!;
 
-            // TODO: Validate input type and prop value type
-
-            return new JsonInput()
+            return new JsonInput(prop.Name)
             {
-                PropertyName = prop.Name,
                 Type = jsonInputAttribute.Type,
                 Label = jsonInputAttribute.Label ?? prop.Name,
                 Options = jsonInputAttribute.Options
