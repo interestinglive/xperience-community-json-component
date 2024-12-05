@@ -1,0 +1,32 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AdminOrgName>xperience-community</AdminOrgName>
+	<RootNamespace>XperienceCommunity.JsonComponent</RootNamespace>
+	<NoWarn>$(NoWarn);S1075</NoWarn>
+	<LangVersion>latest</LangVersion>
+
+	<!-- Required to prevent type conflicts with existing types -->
+	<HotChocolateImplicitUsings>disable</HotChocolateImplicitUsings>
+  </PropertyGroup>
+	
+  <ItemGroup>
+    <AdminClientPath Include="Admin\Client\dist\**">
+      <ProjectName>json-component</ProjectName>
+    </AdminClientPath>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Admin\Client\dist\" />
+  </ItemGroup>
+	
+  <ItemGroup>
+    <Compile Remove="Admin\Client\node_modules\**" />
+    <EmbeddedResource Remove="Admin\Client\node_modules\**" />
+    <None Remove="Admin\Client\node_modules\**" />
+	<AssemblyAttribute Include="CMS.AssemblyDiscoverableAttribute" />
+  </ItemGroup>
+	
+  <ItemGroup>
+    <PackageReference Include="kentico.xperience.admin" />
+  </ItemGroup>
+</Project>
