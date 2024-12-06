@@ -94,7 +94,7 @@ var edits = JsonConvert.DeserializeObject<IEnumerable<ArticleEdit>>(articlePage.
 @if (Model.Edits is not null && Model.Edits.Any())
 {
     <div class="row">
-        @foreach (var edit in viewModel.edits)
+        @foreach (var edit in Model.Edits)
         {
             if (!edit.ShowOnLiveSite) continue;
 
