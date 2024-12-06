@@ -16,22 +16,9 @@ using XperienceCommunity.JsonComponent.Models;
     "JSON array")]
 namespace XperienceCommunity.JsonComponent.Admin.FormComponents.JsonFormComponent;
 
-public class JsonFormComponentClientProperties : FormComponentClientProperties<string>
-{
-    public IEnumerable<JsonInput>? Inputs { get; set; }
-
-
-    public string? ErrorMessage { get; set; }
-}
-
-
-public class JsonFormComponentProperties : FormComponentProperties
-{
-    [TextInputComponent(Label = "Model namespace")]
-    public string? ModelNamespace { get; set; }
-}
-
-
+/// <summary>
+/// A UI form component which stores an array of objects as serialized JSON.
+/// </summary>
 [ComponentAttribute(typeof(JsonFormComponentAttribute))]
 public class JsonFormComponent : FormComponent<JsonFormComponentProperties, JsonFormComponentClientProperties, string>
 {
@@ -41,34 +28,33 @@ public class JsonFormComponent : FormComponent<JsonFormComponentProperties, Json
     public override string ClientComponentName => "@xperience-community/json-component/Json";
 
 
-    protected override Task ConfigureClientProperties(JsonFormComponentClientProperties clientProperties)
+    protected override async Task ConfigureClientProperties(JsonFormComponentClientProperties clientProperties)
     {
-        if (!string.IsNullOrEmpty(Properties.ModelNamespace))
+        await base.ConfigureClientProperties(clientProperties);
+        if (string.IsNullOrEmpty(Properties.ModelClass))
         {
-            var modelType = GetType(Properties.ModelNamespace);
-            if (modelType is null)
-            {
-                clientProperties.ErrorMessage = $"Could not find type '{Properties.ModelNamespace}'";
-            }
-            else
-            {
-                var inputs = GetInputs(modelType);
-                if (inputs is null || !inputs.Any())
-                {
-                    clientProperties.ErrorMessage = "Referenced class contains no JSON properties";
-                }
+            clientProperties.ErrorMessage = "Model class not set";
 
-                string? validationErrorMessage = ValidateProperties(modelType, inputs!);
-                if (validationErrorMessage is not null)
-                {
-                    clientProperties.ErrorMessage = validationErrorMessage;
-                }
-
-                clientProperties.Inputs = inputs;
-            }
+            return;
         }
 
-        return base.ConfigureClientProperties(clientProperties);
+        var modelType = GetType(Properties.ModelClass);
+        if (modelType is null)
+        {
+            clientProperties.ErrorMessage = $"Could not find type '{Properties.ModelClass}'";
+
+            return;
+        }
+
+        clientProperties.Inputs = GetInputs(modelType);
+        if (!clientProperties.Inputs.Any())
+        {
+            clientProperties.ErrorMessage = "Referenced class contains no JSON properties";
+
+            return;
+        }
+
+        clientProperties.ErrorMessage = ValidateProperties(modelType, clientProperties.Inputs);
     }
 
 
@@ -134,4 +120,35 @@ public class JsonFormComponent : FormComponent<JsonFormComponentProperties, Json
 
         return null;
     }
+}
+
+
+/// <summary>
+/// Properties for the JSON React component.
+/// </summary>
+public class JsonFormComponentClientProperties : FormComponentClientProperties<string>
+{
+    /// <summary>
+    /// The configuration for a JSON property and its input control.
+    /// </summary>
+    public IEnumerable<JsonInput>? Inputs { get; set; }
+
+
+    /// <summary>
+    /// The error encountered while processing the component properties, if any.
+    /// </summary>
+    public string? ErrorMessage { get; set; }
+}
+
+
+/// <summary>
+/// Properties for <see cref="JsonFormComponent"/>.
+/// </summary>
+public class JsonFormComponentProperties : FormComponentProperties
+{
+    /// <summary>
+    /// The fully-qualified name of the type to edit in the administration.
+    /// </summary>
+    [TextInputComponent(Label = "Model class")]
+    public string? ModelClass { get; set; }
 }
