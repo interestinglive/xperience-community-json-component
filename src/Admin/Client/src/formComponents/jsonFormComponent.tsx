@@ -30,7 +30,8 @@ enum JsonInputType {
     Number,
     Dropdown,
     Checkbox,
-    RadioGroup
+    RadioGroup,
+    MultipleChoice
 }
 
 export interface JsonFormComponentClientProperties extends FormComponentProps {
@@ -113,8 +114,45 @@ export const JsonFormComponent = (props: JsonFormComponentClientProperties) => {
             case JsonInputType.Text:
             case JsonInputType.Dropdown:
             case JsonInputType.RadioGroup:
+            case JsonInputType.MultipleChoice:
                 return '';
         }
+    };
+
+    /**
+     * Returns the checkbox elements for a multiple choice input.
+     */
+    const getMultipleChoiceElements = (input: JsonInput, jsonObject: any): JSX.Element[] => {
+        const currentValues: string[] = jsonObject[input.propertyName]?.split('|').filter((v:string) => v !== '') ?? [];
+        const options = input.options?.split('|');
+        const checkboxes = options?.map(o => {
+            const optionSplit = o.split(';');
+
+            return <Checkbox
+                label={optionSplit[1]}
+                checked={currentValues.includes(optionSplit[0])}
+                onChange={(_, checked) => {
+                    const newValue = updateMultipleChoiceValue(currentValues, optionSplit[0], checked);
+                    updateJsonObject(newValue, input, jsonObject);
+                }} />
+        });
+        
+        return checkboxes ?? [];
+    };
+
+    /**
+     * Handler for multiple choice input checkbox. Adds or removes a value to the existing array of values and returns the
+     * formatted string.
+     */
+    const updateMultipleChoiceValue = (values: string[], changedValue: string, insert: boolean) => {
+        if (insert) {
+            values.push(changedValue);
+        }
+        else {
+            values = values.filter(v => v !== changedValue);
+        }
+
+        return values.join('|');
     };
 
     /**
@@ -123,6 +161,11 @@ export const JsonFormComponent = (props: JsonFormComponentClientProperties) => {
     const getInput = (input: JsonInput, jsonObject: any, jsonObjectIndex: number): JSX.Element => {
         const propertyValue = jsonObject[input.propertyName];
         switch (input.type) {
+            case JsonInputType.MultipleChoice:
+                return <div>
+                    <label style={{color:'rgb(82,82,82)'}}>{input.label}</label><br /><br />
+                    {getMultipleChoiceElements(input, jsonObject)}
+                </div>
             case JsonInputType.RadioGroup:
                 return <RadioGroup
                     value={propertyValue}
@@ -236,7 +279,7 @@ export const JsonFormComponent = (props: JsonFormComponentClientProperties) => {
         <Button
             label='New'
             icon='xp-plus'
-            title='Add new JSON item'
+            title='Add new item'
             onClick={insertObject} />
     </FormItemWrapper>
 };
