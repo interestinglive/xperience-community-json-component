@@ -30,7 +30,8 @@ enum JsonInputType {
     Number,
     Dropdown,
     Checkbox,
-    RadioGroup
+    RadioGroup,
+    MultipleChoice
 }
 
 export interface JsonFormComponentClientProperties extends FormComponentProps {
@@ -96,7 +97,7 @@ export const JsonFormComponent = (props: JsonFormComponentClientProperties) => {
         return options?.map(o => {
             const optionSplit = o.split(';');
 
-            return <RadioButton value={optionSplit[0]}>{optionSplit[1]}</RadioButton>
+            return <RadioButton disabled={props.disabled} value={optionSplit[0]}>{optionSplit[1]}</RadioButton>
         });
     };
 
@@ -113,8 +114,46 @@ export const JsonFormComponent = (props: JsonFormComponentClientProperties) => {
             case JsonInputType.Text:
             case JsonInputType.Dropdown:
             case JsonInputType.RadioGroup:
+            case JsonInputType.MultipleChoice:
                 return '';
         }
+    };
+
+    /**
+     * Returns the checkbox elements for a multiple choice input.
+     */
+    const getMultipleChoiceElements = (input: JsonInput, jsonObject: any): JSX.Element[] => {
+        const currentValues: string[] = jsonObject[input.propertyName]?.split('|').filter((v:string) => v !== '') ?? [];
+        const options = input.options?.split('|');
+        const checkboxes = options?.map(o => {
+            const optionSplit = o.split(';');
+
+            return <Checkbox
+                label={optionSplit[1]}
+                checked={currentValues.includes(optionSplit[0])}
+                disabled={props.disabled}
+                onChange={(_, checked) => {
+                    const newValue = updateMultipleChoiceValue(currentValues, optionSplit[0], checked);
+                    updateJsonObject(newValue, input, jsonObject);
+                }} />
+        });
+        
+        return checkboxes ?? [];
+    };
+
+    /**
+     * Handler for multiple choice input checkbox. Adds or removes a value to the existing array of values and returns the
+     * formatted string.
+     */
+    const updateMultipleChoiceValue = (values: string[], changedValue: string, insert: boolean) => {
+        if (insert) {
+            values.push(changedValue);
+        }
+        else {
+            values = values.filter(v => v !== changedValue);
+        }
+
+        return values.join('|');
     };
 
     /**
@@ -123,11 +162,17 @@ export const JsonFormComponent = (props: JsonFormComponentClientProperties) => {
     const getInput = (input: JsonInput, jsonObject: any, jsonObjectIndex: number): JSX.Element => {
         const propertyValue = jsonObject[input.propertyName];
         switch (input.type) {
+            case JsonInputType.MultipleChoice:
+                return <div>
+                    <label style={{color:'rgb(82,82,82)'}}>{input.label}</label><br /><br />
+                    {getMultipleChoiceElements(input, jsonObject)}
+                </div>
             case JsonInputType.RadioGroup:
                 return <RadioGroup
                     value={propertyValue}
                     label={input.label}
                     name={jsonObjectIndex + '-' + input.propertyName}
+                    disabled={props.disabled}
                     onChange={(val) => updateJsonObject(val, input, jsonObject)}>
                     {getRadioGroupOptions(input)}
                 </RadioGroup>
@@ -135,6 +180,7 @@ export const JsonFormComponent = (props: JsonFormComponentClientProperties) => {
                 return <div><Checkbox
                     label={input.label}
                     checked={propertyValue}
+                    disabled={props.disabled}
                     onChange={(_, checked) => updateJsonObject(checked, input, jsonObject)} /></div>
             case JsonInputType.Dropdown:
                 return <Select
@@ -142,6 +188,7 @@ export const JsonFormComponent = (props: JsonFormComponentClientProperties) => {
                     label={input.label}
                     clearable={true}
                     clearButtonTooltip='Clear'
+                    disabled={props.disabled}
                     onChange={(val) => updateJsonObject(val, input, jsonObject)}>
                     {getDropdownOptions(input)}
                 </Select>
@@ -150,6 +197,7 @@ export const JsonFormComponent = (props: JsonFormComponentClientProperties) => {
                     type='number'
                     label={input.label}
                     value={propertyValue}
+                    disabled={props.disabled}
                     onChange={(e) => updateJsonObject(parseInt(e.target.value), input, jsonObject)} />
             default:
             case JsonInputType.Text:
@@ -157,6 +205,7 @@ export const JsonFormComponent = (props: JsonFormComponentClientProperties) => {
                     type='text'
                     label={input.label}
                     value={propertyValue}
+                    disabled={props.disabled}
                     onChange={(e) => updateJsonObject(e.target.value, input, jsonObject)} />
         }
     };
@@ -192,6 +241,7 @@ export const JsonFormComponent = (props: JsonFormComponentClientProperties) => {
             title='Delete'
             borderless={true}
             size={ButtonSize.S}
+            disabled={props.disabled}
             color={ButtonColor.Quinary}
             onClick={() => deleteObject(index)} />
 
@@ -236,7 +286,8 @@ export const JsonFormComponent = (props: JsonFormComponentClientProperties) => {
         <Button
             label='New'
             icon='xp-plus'
-            title='Add new JSON item'
+            title='Add new item'
+            disabled={props.disabled}
             onClick={insertObject} />
     </FormItemWrapper>
 };

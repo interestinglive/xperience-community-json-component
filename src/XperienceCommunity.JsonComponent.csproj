@@ -1,12 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AdminOrgName>xperience-community</AdminOrgName>
-	<RootNamespace>XperienceCommunity.JsonComponent</RootNamespace>
-	<NoWarn>$(NoWarn);S1075</NoWarn>
-	<LangVersion>latest</LangVersion>
+    <RootNamespace>XperienceCommunity.JsonComponent</RootNamespace>
+    <NoWarn>$(NoWarn);S1075</NoWarn>
+    <LangVersion>latest</LangVersion>
 
-	<!-- Required to prevent type conflicts with existing types -->
-	<HotChocolateImplicitUsings>disable</HotChocolateImplicitUsings>
+    <!-- Required to prevent type conflicts with existing types -->
+    <HotChocolateImplicitUsings>disable</HotChocolateImplicitUsings>
   </PropertyGroup>
 	
   <ItemGroup>
