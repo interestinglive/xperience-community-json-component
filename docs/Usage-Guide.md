@@ -41,6 +41,9 @@ public bool ShowOnLiveSite { get; set; }
 
 [JsonInput(Type = JsonInputType.Dropdown, Options = "1;Dave|2;Petr")]
 public string User { get; set; }
+
+[JsonInput(Type = JsonInputType.MultipleChoice, Options = "sales;Sales|mkt;Marketing|it|IT")]
+public string Teams { get; set; }
 ```
 
 ## Example
