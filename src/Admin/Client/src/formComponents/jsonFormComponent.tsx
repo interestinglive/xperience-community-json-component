@@ -4,56 +4,40 @@ import {
     Button,
     ButtonColor,
     ButtonSize,
-    Checkbox,
     FormItemWrapper,
     Headline,
     HeadlineSize,
-    Input,
-    MenuItem,
-    RadioButton,
-    RadioGroup,
-    Select,
     Spacing
 } from '@kentico/xperience-admin-components';
+import { JsonInputElement, JsonInputType } from './jsonInputElement';
 
-/** Corresponds with the C# class JsonInput */
-interface JsonInput {
-    propertyName: string;
-    label: string;
-    type: number;
-    options: string | undefined;
-}
-
-/** Corresponds with the C# class JsonInputType */
-enum JsonInputType {
-    Text,
-    Number,
-    Dropdown,
-    Checkbox,
-    RadioGroup,
-    MultipleChoice
-}
-
-export interface JsonFormComponentClientProperties extends FormComponentProps {
+interface JsonFormComponentClientProperties extends FormComponentProps {
     inputs: JsonInput[] | null;
     errorMessage: string | null;
+}
+
+/** Corresponds with the C# class JsonInput */
+export interface JsonInput {
+    /** The name of the property being edited. */
+    propertyName: string
+    /** The label displayed for the property during editing. */
+    label: string
+    /** The input used for editing the property value. Values can be found in {@link JsonInputType} */
+    type: number
+    /** A list of options used by inputs like {@link JsonInputType.Dropdown}. */
+    options: string | undefined
 }
 
 export const JsonFormComponent = (props: JsonFormComponentClientProperties) => {
     const jsonObjects: any[] = props.value ? JSON.parse(props.value) : [];
 
+    /**
+     * Updates the form with the field value (the serialized JSON object array).
+     */
     const save = () => {
         if (props.onChange) {
             props.onChange(JSON.stringify(jsonObjects));
         }
-    };
-
-    /**
-     * Handler for input change event. Updates a JSON objects property and saves the field value.
-     */
-    const updateJsonObject = (value: any | undefined, input: JsonInput, jsonObject: any) => {
-        jsonObject[input.propertyName] = value;
-        save();
     };
 
     /**
@@ -78,30 +62,6 @@ export const JsonFormComponent = (props: JsonFormComponentClientProperties) => {
     };
 
     /**
-     * Returns an array of {@link MenuItem}s generated from the provided inputs {@link JsonInput.options}.
-     */
-    const getDropdownOptions = (input: JsonInput) => {
-        const options = input.options?.split('|');
-        return options?.map(o => {
-            const optionSplit = o.split(';');
-
-            return <MenuItem primaryLabel={optionSplit[1]} value={optionSplit[0]} />
-        });
-    };
-
-    /**
-     * Returns an array of {@link RadioButton}s generated from the provided inputs {@link JsonInput.options}.
-     */
-    const getRadioGroupOptions = (input: JsonInput) => {
-        const options = input.options?.split('|');
-        return options?.map(o => {
-            const optionSplit = o.split(';');
-
-            return <RadioButton disabled={props.disabled} value={optionSplit[0]}>{optionSplit[1]}</RadioButton>
-        });
-    };
-
-    /**
      * Returns the default value of the provided {@link input}.
      */
     const getDefaultValue = (input: JsonInput) => {
@@ -120,97 +80,6 @@ export const JsonFormComponent = (props: JsonFormComponentClientProperties) => {
     };
 
     /**
-     * Returns the checkbox elements for a multiple choice input.
-     */
-    const getMultipleChoiceElements = (input: JsonInput, jsonObject: any): JSX.Element[] => {
-        const currentValues: string[] = jsonObject[input.propertyName]?.split('|').filter((v:string) => v !== '') ?? [];
-        const options = input.options?.split('|');
-        const checkboxes = options?.map(o => {
-            const optionSplit = o.split(';');
-
-            return <Checkbox
-                label={optionSplit[1]}
-                checked={currentValues.includes(optionSplit[0])}
-                disabled={props.disabled}
-                onChange={(_, checked) => {
-                    const newValue = updateMultipleChoiceValue(currentValues, optionSplit[0], checked);
-                    updateJsonObject(newValue, input, jsonObject);
-                }} />
-        });
-        
-        return checkboxes ?? [];
-    };
-
-    /**
-     * Handler for multiple choice input checkbox. Adds or removes a value to the existing array of values and returns the
-     * formatted string.
-     */
-    const updateMultipleChoiceValue = (values: string[], changedValue: string, insert: boolean) => {
-        if (insert) {
-            values.push(changedValue);
-        }
-        else {
-            values = values.filter(v => v !== changedValue);
-        }
-
-        return values.join('|');
-    };
-
-    /**
-     * Returns an input element for the specified {@link input} and {@link jsonObject}.
-     */
-    const getInput = (input: JsonInput, jsonObject: any, jsonObjectIndex: number): JSX.Element => {
-        const propertyValue = jsonObject[input.propertyName];
-        switch (input.type) {
-            case JsonInputType.MultipleChoice:
-                return <div>
-                    <label style={{color:'rgb(82,82,82)'}}>{input.label}</label><br /><br />
-                    {getMultipleChoiceElements(input, jsonObject)}
-                </div>
-            case JsonInputType.RadioGroup:
-                return <RadioGroup
-                    value={propertyValue}
-                    label={input.label}
-                    name={jsonObjectIndex + '-' + input.propertyName}
-                    disabled={props.disabled}
-                    onChange={(val) => updateJsonObject(val, input, jsonObject)}>
-                    {getRadioGroupOptions(input)}
-                </RadioGroup>
-            case JsonInputType.Checkbox:
-                return <div><Checkbox
-                    label={input.label}
-                    checked={propertyValue}
-                    disabled={props.disabled}
-                    onChange={(_, checked) => updateJsonObject(checked, input, jsonObject)} /></div>
-            case JsonInputType.Dropdown:
-                return <Select
-                    value={propertyValue}
-                    label={input.label}
-                    clearable={true}
-                    clearButtonTooltip='Clear'
-                    disabled={props.disabled}
-                    onChange={(val) => updateJsonObject(val, input, jsonObject)}>
-                    {getDropdownOptions(input)}
-                </Select>
-            case JsonInputType.Number:
-                return <Input
-                    type='number'
-                    label={input.label}
-                    value={propertyValue}
-                    disabled={props.disabled}
-                    onChange={(e) => updateJsonObject(parseInt(e.target.value), input, jsonObject)} />
-            default:
-            case JsonInputType.Text:
-                return <Input
-                    type='text'
-                    label={input.label}
-                    value={propertyValue}
-                    disabled={props.disabled}
-                    onChange={(e) => updateJsonObject(e.target.value, input, jsonObject)} />
-        }
-    };
-
-    /**
      * Converts each JSON object in the values array into a div containing inputs for each property.
      */
     const getObjectContainers = (): JSX.Element[] => {
@@ -222,7 +91,8 @@ export const JsonFormComponent = (props: JsonFormComponentClientProperties) => {
                 return;
             }
 
-            const inputElements = props.inputs.map(i => getInput(i, o, index));
+            const inputElements = props.inputs.map(i =>
+                <JsonInputElement disabled={props.disabled} input={i} editedObject={o} onUpdate={save} />);
             const containerContent = insertBetween(<br />, inputElements);
             // Add header to beginning of content
             containerContent.unshift(getContainerHeader(index));
@@ -259,6 +129,7 @@ export const JsonFormComponent = (props: JsonFormComponentClientProperties) => {
     const insertBetween = (separator: JSX.Element, elements: JSX.Element[]) =>
         elements.flatMap((x) => [separator, x]).slice(1);
 
+    // If there was an error during the C# processing of the component, display the error
     if (props.errorMessage) {
         return <FormItemWrapper
             label={props.label}
@@ -282,7 +153,7 @@ export const JsonFormComponent = (props: JsonFormComponentClientProperties) => {
         labelIconTooltip={props.tooltip}>
 
         {containers}
-        <br/>
+        <br />
         <Button
             label='New'
             icon='xp-plus'
