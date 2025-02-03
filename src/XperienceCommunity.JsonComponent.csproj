@@ -7,6 +7,7 @@
 
     <!-- Required to prevent type conflicts with existing types -->
     <HotChocolateImplicitUsings>disable</HotChocolateImplicitUsings>
+    <TargetFramework>net8.0</TargetFramework>
   </PropertyGroup>
 	
   <ItemGroup>
@@ -28,5 +29,12 @@
 	
   <ItemGroup>
     <PackageReference Include="kentico.xperience.admin" />
+  </ItemGroup>
+	
+  <ItemGroup>
+    <PackageReference Update="SonarAnalyzer.CSharp">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
 </Project>
