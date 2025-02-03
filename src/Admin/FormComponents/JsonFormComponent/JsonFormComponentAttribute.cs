@@ -4,4 +4,5 @@ namespace XperienceCommunity.JsonComponent.Admin.FormComponents.JsonFormComponen
 
 public class JsonFormComponentAttribute : FormComponentAttribute
 {
+    public string ModelClass { get; set; } = "";
 }
