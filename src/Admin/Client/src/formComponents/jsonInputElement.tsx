@@ -5,7 +5,9 @@ import {
     MenuItem,
     RadioButton,
     RadioGroup,
-    Select
+    Select,
+    RichTextEditor,
+    TextArea
 } from '@kentico/xperience-admin-components';
 import { JsonInput } from './jsonFormComponent';
 
@@ -16,7 +18,9 @@ export enum JsonInputType {
     Dropdown,
     Checkbox,
     RadioGroup,
-    MultipleChoice
+    MultipleChoice,
+    RichTextEditor,
+    TextArea
 }
 
 interface JsonInputElementProperties {
@@ -144,6 +148,63 @@ export const JsonInputElement = (props: JsonInputElementProperties): JSX.Element
                 value={propertyValue}
                 disabled={props.disabled}
                 onChange={(e) => updateEditedObject(parseInt(e.target.value))} />
+        case JsonInputType.RichTextEditor:
+            return <RichTextEditor
+                label={props.input.label}
+                value={propertyValue}
+                disabled={props.disabled}
+                customConfiguration={{
+                    "imageDefaultWidth": 0,
+                    "imageResize": true,
+                    "imageUpload": false,
+                    "imagePaste": false,
+                    "imageDefaultMargin": null,
+                    "imageMove": true,
+                    "imageAddNewLine": false,
+                    "toolbarButtons": [
+                        "bold",
+                        "italic",
+                        "underline",
+                        "paragraphFormat",
+                        "formatOL",
+                        "formatUL",
+                        "outdent",
+                        "indent",
+                        "alignLeft",
+                        "alignCenter",
+                        "alignRight",
+                        "html",
+                        "insertLinkDropDown"
+                    ],
+                    "imageEditButtons": ["imageReplace", "imageAlt", "imageAlign", "imageDisplay", "imageSize", "imageRemove"],
+                    "customPlugins": [
+                        {
+                            "pluginName": "@kentico/xperience-admin-base/Link",
+                            "pluginOptions": {
+                                "dropdownOptions": [
+                                    {
+                                        "linkOption": "asset",
+                                        "componentName": "@kentico/xperience-admin-base/AssetPanel"
+                                    },
+                                    {
+                                        "linkOption": "external"
+                                    },
+                                    {
+                                        "linkOption": "webpage",
+                                        "componentName": "@kentico/xperience-admin-websites/PageLink"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                } }
+                onChange={(e) => updateEditedObject(e)} />
+        case JsonInputType.TextArea:
+            return <TextArea
+                label={props.input.label}
+                value={propertyValue}
+                disabled={props.disabled}
+                onChange={(e) => updateEditedObject(e.target.value)} />
         default:
         case JsonInputType.Text:
             return <Input

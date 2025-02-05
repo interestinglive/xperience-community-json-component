@@ -5,6 +5,8 @@ using CMS.Helpers;
 using Kentico.Xperience.Admin.Base.FormAnnotations;
 using Kentico.Xperience.Admin.Base.Forms;
 
+using Microsoft.AspNetCore.Mvc;
+
 using XperienceCommunity.JsonComponent.Admin.FormComponents.JsonFormComponent;
 using XperienceCommunity.JsonComponent.Attributes;
 using XperienceCommunity.JsonComponent.Enum;
@@ -57,6 +59,30 @@ public class JsonFormComponent : FormComponent<JsonFormComponentProperties, Json
         clientProperties.ErrorMessage = ValidateProperties(modelType, clientProperties.Inputs);
     }
 
+
+    [FormComponentCommand(CommandName = "GetListingConfiguration")]
+    public async Task<IActionResult> GetListingConfiguration(/* parameters as needed */)
+    {
+        var config = new
+        {
+            // configuration properties
+        };
+
+        // If your logic is synchronous, wrap it:
+        return await Task.FromResult(new JsonResult(config));
+    }
+    [FormComponentCommand(CommandName = "GetMultiSourceAssetPanelProperties")]
+    public async Task<IActionResult> GetMultiSourceAssetPanelProperties(/* parameters as needed */)
+    {
+        var response =
+            new
+            {
+                assetPanelEnabled = false,
+                imageExtensions = "bmp;gif;ico;png;wmf;jpg;jpeg;tiff;tif;webp;svg;avif;jfif;jfi;jif;jpe;dib"
+            };
+
+        return await Task.FromResult(new JsonResult(response));
+    }
 
     private static string? ValidateProperties(Type modelType, IEnumerable<JsonInput> inputs)
     {
