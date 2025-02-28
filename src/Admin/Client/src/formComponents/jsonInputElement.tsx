@@ -173,30 +173,10 @@ export const JsonInputElement = (props: JsonInputElementProperties): JSX.Element
                         "alignLeft",
                         "alignCenter",
                         "alignRight",
-                        "html",
-                        "insertLinkDropDown"
+                        "html"
                     ],
                     "imageEditButtons": ["imageReplace", "imageAlt", "imageAlign", "imageDisplay", "imageSize", "imageRemove"],
-                    "customPlugins": [
-                        {
-                            "pluginName": "@kentico/xperience-admin-base/Link",
-                            "pluginOptions": {
-                                "dropdownOptions": [
-                                    {
-                                        "linkOption": "asset",
-                                        "componentName": "@kentico/xperience-admin-base/AssetPanel"
-                                    },
-                                    {
-                                        "linkOption": "external"
-                                    },
-                                    {
-                                        "linkOption": "webpage",
-                                        "componentName": "@kentico/xperience-admin-websites/PageLink"
-                                    }
-                                ]
-                            }
-                        }
-                    ]
+                    
                 } }
                 onChange={(e) => updateEditedObject(e)} />
         case JsonInputType.TextArea:
