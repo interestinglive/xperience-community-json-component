@@ -11,6 +11,23 @@ import {
 } from '@kentico/xperience-admin-components';
 import { JsonInput } from './jsonFormComponent';
 
+/** Inject CSS for RichTextEditor toolbar fix */
+if (!document.getElementById('json-rte-style')) {
+    const style = document.createElement('style');
+    style.id = 'json-rte-style';
+    style.textContent = `
+      .json-rte .fr-command.fr-btn[data-cmd="insertLink"] {
+        width: 40px;
+        margin: 4px 2px;
+        display: block;
+      }
+      .json-rte .fr-command.fr-btn[data-cmd="insertLink"] * {
+        display: block;
+      }
+    `;
+    document.head.appendChild(style);
+}
+
 /** Corresponds with the C# class JsonInputType */
 export enum JsonInputType {
     Text,
@@ -149,7 +166,7 @@ export const JsonInputElement = (props: JsonInputElementProperties): JSX.Element
                 disabled={props.disabled}
                 onChange={(e) => updateEditedObject(parseInt(e.target.value))} />
         case JsonInputType.RichTextEditor:
-            return <RichTextEditor
+            return <div className="json-rte"><RichTextEditor
                 label={props.input.label}
                 value={propertyValue}
                 disabled={props.disabled}
@@ -173,12 +190,13 @@ export const JsonInputElement = (props: JsonInputElementProperties): JSX.Element
                         "alignLeft",
                         "alignCenter",
                         "alignRight",
+                        "insertLink",
                         "html"
                     ],
                     "imageEditButtons": ["imageReplace", "imageAlt", "imageAlign", "imageDisplay", "imageSize", "imageRemove"],
-                    
-                } }
-                onChange={(e) => updateEditedObject(e)} />
+
+                }}
+                onChange={(e) => updateEditedObject(e)} /></div>
         case JsonInputType.TextArea:
             return <TextArea
                 label={props.input.label}

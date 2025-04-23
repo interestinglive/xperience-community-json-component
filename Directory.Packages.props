@@ -6,7 +6,7 @@
     <DisableImplicitNuGetFallbackFolder>true</DisableImplicitNuGetFallbackFolder>
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="Kentico.Xperience.Admin" Version="30.0.2" />
+    <PackageVersion Include="Kentico.Xperience.Admin" Version="30.3.3" />
     <PackageVersion Include="Kentico.Xperience.Azurestorage" Version="30.0.2" />
     <PackageVersion Include="Kentico.Xperience.Cloud" Version="30.0.2" />
     <PackageVersion Include="Kentico.Xperience.Imageprocessing" Version="30.0.2" />
